@@ -1,0 +1,137 @@
+/*
+ * Layout only.
+ *
+ * Colour, type and control styling deliberately come from the host page: the
+ * markup reuses the host's own classes (`dataList`, `input`, `button`) so the
+ * editor inherits whatever theme is in force. Everything here is the part the
+ * host cannot know about — the row geometry.
+ *
+ * Selectors are flat rather than nested so the file needs no preprocessor.
+ */
+
+/*
+ * Available to screen readers, absent from the page. `display: none` would
+ * remove it from the accessibility tree too, which is the opposite of what the
+ * labels need.
+ */
+.nt-performance-band .nt-performance-band-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.nt-performance-band .band-container--empty {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    text-align: center;
+}
+
+/* One band per row, fixed height so the list reads as a scale rather than as
+   a stack of differently sized cards. The column widths line up with the
+   header's colgroup. */
+.nt-performance-band .band-container {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    min-width: 100%;
+    height: 56px;
+    min-height: 56px;
+    margin-top: 8px;
+    padding: 0 6px;
+    border-radius: 8px;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.nt-performance-band .band-container--color {
+    display: flex;
+    flex: 0 0 110px;
+    align-items: center;
+    gap: 6px;
+}
+
+.nt-performance-band .band-container--color select {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+/*
+ * The library chose to render a swatch, so it owes it the geometry it needs to
+ * be a swatch at all. The colour itself is the host's: the band's token is
+ * applied as a class and exposed as `data-color`, and the host's stylesheet is
+ * what paints it.
+ */
+.nt-performance-band .band-swatch {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border: 1px solid currentcolor;
+    border-radius: 50%;
+}
+
+.nt-performance-band .band-container--label {
+    display: flex;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.nt-performance-band .band-container--label input {
+    width: 100%;
+}
+
+.nt-performance-band .band-container--value {
+    flex: 0 0 120px;
+}
+
+.nt-performance-band .band-container--value input {
+    width: 100%;
+}
+
+.nt-performance-band .band-container--range {
+    flex: 0 0 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nt-performance-band .band-container--mastery {
+    display: flex;
+    flex: 0 0 90px;
+    align-items: center;
+    gap: 5px;
+}
+
+.nt-performance-band .band-mastery-label {
+    white-space: nowrap;
+}
+
+.nt-performance-band .band-container--actions {
+    display: flex;
+    flex: 0 0 50px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.nt-performance-band .band-footer-container {
+    padding-right: 6px;
+    font-size: 20px;
+    line-height: 40px;
+}
+
+.nt-performance-band .band-footer-container::after {
+    content: "";
+    display: block;
+    clear: both;
+}

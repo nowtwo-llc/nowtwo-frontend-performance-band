@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Frontend Performance Band — a performance band editor for the browser</title>
+        <meta
+            name="description"
+            content="A dependency-free performance band editor: labelled score thresholds, mastery flags and colour tokens, rendered straight into a host form."
+        />
+
+        <link rel="stylesheet" href="./demo.css" />
+        <style>
+            /* Frontend Performance Band's identity. */
+            :root {
+                --nt-accent: #3a6ea5;
+                --nt-accent-ink: #061119;
+            }
+
+            /* The editor lays out wide rows, so the demo widens the shell's
+               reading column for the editor itself and leaves the prose narrow. */
+            .nt-wide {
+                max-width: 62rem;
+            }
+
+            /* Standing in for the host theme. The editor ships layout only — a
+               real page brings its own control styling through the classes the
+               markup reuses (`input`, `button`, `dataList`). */
+            .nt-host {
+                margin-top: 1rem;
+                padding: 1rem;
+                border: 1px solid var(--nt-line);
+                border-radius: 10px;
+                background: var(--nt-surface);
+                overflow-x: auto;
+            }
+
+            .nt-host .input {
+                width: 100%;
+                padding: 0.4rem 0.5rem;
+                border: 1px solid var(--nt-line);
+                border-radius: 6px;
+                background: var(--nt-bg);
+                color: var(--nt-fg);
+                font: inherit;
+                font-size: 0.85rem;
+            }
+
+            .nt-host .button {
+                padding: 0.3rem 0.45rem;
+                border: 1px solid transparent;
+                border-radius: 6px;
+                background: none;
+                color: var(--nt-muted);
+                font: inherit;
+                cursor: pointer;
+            }
+
+            .nt-host .button:hover {
+                border-color: var(--nt-line);
+                color: var(--nt-accent-text);
+            }
+
+            .nt-host .dataList-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .nt-host .dataList-cell {
+                padding: 0.4rem 0;
+                border-bottom: 1px solid var(--nt-line);
+                color: var(--nt-muted);
+                font-size: 0.78rem;
+                text-align: left;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .nt-host .float--right {
+                float: right;
+                font-size: 0.9rem;
+            }
+
+            .nt-host .band-container {
+                border: 1px solid var(--nt-line);
+                background: var(--nt-bg);
+            }
+
+            .nt-host .band-container--range,
+            .nt-host .band-mastery-label {
+                color: var(--nt-muted);
+                font-size: 0.82rem;
+            }
+
+            .nt-host .band-container--empty {
+                color: var(--nt-muted);
+                font-size: 0.85rem;
+            }
+
+            /*
+             * The colour tokens are the *host's*, not the library's — this is
+             * the stylesheet that gives `blue-base` a blue. Swap these for your
+             * own palette and pass matching tokens via the `colors` option.
+             */
+            .nt-host .blue-base {
+                border-color: #3a6ea5;
+                background: #3a6ea5;
+            }
+
+            .nt-host .green-base {
+                border-color: #2f8f6b;
+                background: #2f8f6b;
+            }
+
+            .nt-host .yellow-base {
+                border-color: #c8971f;
+                background: #c8971f;
+            }
+
+            .nt-host .red-base {
+                border-color: #b4442c;
+                background: #b4442c;
+            }
+
+            .nt-payload {
+                max-height: 18rem;
+                overflow: auto;
+            }
+
+            #problems.is-valid {
+                color: var(--nt-accent-text);
+            }
+
+            #problems.is-invalid {
+                color: #b4442c;
+            }
+        </style>
+
+        <link rel="stylesheet" href="../dist/frontend-performance-band.min.css" />
+    </head>
+    <body>
+        <main class="nt-page nt-wide">
+            <h1 class="nt-title">frontend<em>performance band</em></h1>
+            <p class="nt-lede">
+                A performance band editor for the browser. Labelled score thresholds, mastery flags and host colour
+                tokens — rendered as form inputs inside your own form, with no save of its own.
+            </p>
+
+            <ul class="nt-meta">
+                <li>v1.0.0</li>
+                <li>TypeScript</li>
+                <li>0 dependencies</li>
+                <li>MIT</li>
+            </ul>
+
+            <section class="nt-section">
+                <h2 class="nt-label">Try it</h2>
+                <div class="nt-controls">
+                    <button id="reset" type="button" class="nt-trigger">Load sample bands</button>
+                    <button id="empty" type="button" class="nt-btn">Start empty</button>
+                    <button id="show-payload" type="button" class="nt-btn">Show form data</button>
+                </div>
+                <p id="status" class="nt-status" role="status"></p>
+                <p class="nt-note">
+                    <strong>Type a new minimum and the list re-sorts around it</strong> without losing your place — a
+                    band's position is derived from its threshold rather than dragged, so reordering needs no mouse at
+                    all. The <em>Covers</em> column shows the span each band claims; it updates as its neighbours move.
+                </p>
+                <div id="problems" class="nt-note" role="status"></div>
+
+                <!-- The editor renders into a container inside the host's form; the
+                     host is what posts the fields. -->
+                <form id="band-form" class="nt-host" onsubmit="return false">
+                    <div id="nt-performance-band-app"></div>
+                </form>
+            </section>
+
+            <section class="nt-section">
+                <h2 class="nt-label">What gets posted</h2>
+                <p class="nt-note">
+                    This editor has no save button. It writes named inputs into the surrounding form and the host
+                    submits them, so the field names are a contract with your server. Press
+                    <strong>Show form data</strong> above to see exactly what the form would send — including a
+                    <code>mastery_flg</code> for every band, because an unchecked checkbox posts nothing and would
+                    shift every following flag onto the wrong band.
+                </p>
+                <pre class="nt-code nt-payload"><code id="payload"></code></pre>
+            </section>
+
+            <section class="nt-section">
+                <h2 class="nt-label">Install</h2>
+                <pre class="nt-code"><code>npm install @nowtwo-llc/frontend-performance-band</code></pre>
+            </section>
+
+            <section class="nt-section">
+                <h2 class="nt-label">Use</h2>
+                <pre class="nt-code"><code>import { PerformanceBandEditor } from '@nowtwo-llc/frontend-performance-band';
+import '@nowtwo-llc/frontend-performance-band/style.css';
+
+const editor = new PerformanceBandEditor({
+    container: '#nt-performance-band-app',
+    bands: window._performanceBand
+});
+
+editor.mount();</code></pre>
+                <p class="nt-note">
+                    Read the live bands back with <code>editor.bands</code> and the mastery tally with
+                    <code>editor.masteryCount</code>. Call <code>destroy()</code> to remove the DOM and every listener
+                    it registered.
+                </p>
+            </section>
+
+            <section class="nt-section">
+                <h2 class="nt-label">Host integration</h2>
+                <p class="nt-note">
+                    Everything page-specific goes through one <code>HostBridge</code>: icon markup, tooltip attributes,
+                    activation and dismissing tooltips. The default implementation reads a
+                    <code>window.PerformanceBandHost</code> object of that shape, which is exactly what this page
+                    defines in <code>host.js</code> — the whole reason the demo can run the real bundle with no
+                    application framework behind it.
+                </p>
+                <ul class="nt-list">
+                    <li><strong>Colour tokens are yours.</strong> The library stores and posts them; your stylesheet
+                        paints them. This page's <code>.blue-base</code> and friends are the whole integration.</li>
+                    <li><strong>Every bridge member is optional.</strong> Anything omitted degrades to a no-op, so the
+                        editor still renders and still posts correct form data on a page that provides nothing.</li>
+                </ul>
+            </section>
+
+            <footer class="nt-footer">
+                <p>
+                    MIT licensed ·
+                    <a href="https://github.com/nowtwo-llc/nowtwo-frontend-performance-band">Source on GitHub</a>
+                </p>
+                <p>Maintained by <a href="https://www.nowtwo.io/">NowTwo LLC</a>.</p>
+            </footer>
+        </main>
+
+        <script src="./host.js"></script>
+        <script src="../dist/frontend-performance-band.min.js"></script>
+        <script src="./main.js"></script>
+    </body>
+</html>

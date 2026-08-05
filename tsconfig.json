@@ -1,0 +1,22 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "declaration": true,
+        "declarationMap": true,
+        "esModuleInterop": true,
+        "lib": ["es2020", "dom"],
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "noResolve": false,
+        "removeComments": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "es2020"
+    },
+    // No outDir/rootDir here: webpack owns the bundle output and
+    // tsconfig.types.json owns declaration emit.
+    "exclude": ["./node_modules"],
+    "include": ["./src"],
+    "typeRoots": ["./node_modules/@types", "./src"]
+}

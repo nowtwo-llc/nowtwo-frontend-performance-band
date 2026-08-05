@@ -1,0 +1,16 @@
+// Test-side type checking.
+//
+// The library config is emit-oriented and covers src only. The tests need Node
+// types (Vitest's declarations reference node: builtins) and must not emit, so
+// they type-check under their own config rather than loosening the shipped
+// library settings. Target and module resolution now come from the base.
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "declaration": false,
+        "declarationMap": false,
+        "noEmit": true,
+        "types": ["node"]
+    },
+    "include": ["./tests", "./vitest.config.mts"]
+}

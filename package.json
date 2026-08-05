@@ -1,0 +1,99 @@
+{
+    "name": "@nowtwo-llc/frontend-performance-band",
+    "version": "1.0.0",
+    "description": "A dependency-free performance band editor for the browser: labelled score thresholds, mastery flags and colour tokens, rendered straight into a host form.",
+    "keywords": [
+        "performance-band",
+        "grading",
+        "assessment",
+        "education",
+        "mastery",
+        "thresholds",
+        "editor",
+        "browser",
+        "dom",
+        "typescript"
+    ],
+    "author": "NowTwo LLC <support@nowtwo.io> (https://www.nowtwo.io/)",
+    "license": "MIT",
+    "homepage": "https://github.com/nowtwo-llc/nowtwo-frontend-performance-band#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nowtwo-llc/nowtwo-frontend-performance-band.git"
+    },
+    "bugs": {
+        "url": "https://github.com/nowtwo-llc/nowtwo-frontend-performance-band/issues"
+    },
+    "main": "./dist/frontend-performance-band.cjs",
+    "module": "./dist/frontend-performance-band.mjs",
+    "types": "./dist/types/PerformanceBandEditor.d.ts",
+    "unpkg": "./dist/frontend-performance-band.min.js",
+    "jsdelivr": "./dist/frontend-performance-band.min.js",
+    "exports": {
+        ".": {
+            "types": "./dist/types/PerformanceBandEditor.d.ts",
+            "import": "./dist/frontend-performance-band.mjs",
+            "require": "./dist/frontend-performance-band.cjs",
+            "default": "./dist/frontend-performance-band.mjs"
+        },
+        "./style.css": "./dist/frontend-performance-band.css",
+        "./style.min.css": "./dist/frontend-performance-band.min.css",
+        "./package.json": "./package.json"
+    },
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist/"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "npm run build:prod",
+        "build:dev": "cross-env NODE_ENV=development webpack --progress",
+        "build:prod": "npm run clean:dist && cross-env NODE_ENV=production BUILD_DIR=./dist/ webpack --progress && npm run build:types",
+        "build:types": "tsc -p tsconfig.types.json",
+        "clean": "rm -rf build dist coverage",
+        "clean:dist": "rm -rf dist",
+        "demo": "npm run build:prod && node scripts/serve-demo.mjs",
+        "format": "prettier --write \"src/**/*.{ts,css}\" \"tests/**/*.ts\" \"example/**/*.js\" \"*.{js,mjs,json}\"",
+        "format:check": "prettier --check \"src/**/*.{ts,css}\" \"tests/**/*.ts\" \"example/**/*.js\" \"*.{js,mjs,json}\"",
+        "lint": "npm run oxlint && npm run format && npm run stylelint",
+        "lint:check": "oxlint --max-warnings=0 && npm run format:check && npm run stylelint",
+        "lint:fix": "npm run lint",
+        "oxlint": "oxlint --fix",
+        "prepublishOnly": "npm run build:prod",
+        "stylelint": "stylelint \"src/**/*.css\"",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "update": "npm-check-updates -u",
+        "update:check": "npm-check-updates",
+        "watch": "cross-env NODE_ENV=development webpack --progress --watch"
+    },
+    "devDependencies": {
+        "@types/node": "^26.1.2",
+        "@vitest/coverage-v8": "^4.1.10",
+        "cross-env": "^10.1.0",
+        "css-loader": "^7.1.4",
+        "css-minimizer-webpack-plugin": "^8.0.0",
+        "esbuild-loader": "^4.5.0",
+        "jsdom": "^30.0.1",
+        "mini-css-extract-plugin": "^2.10.2",
+        "npm-check-updates": "^23.0.1",
+        "oxlint": "^1.77.0",
+        "prettier": "^3.9.6",
+        "stylelint": "^17.14.1",
+        "stylelint-prettier": "^5.0.3",
+        "terser-webpack-plugin": "^5.6.1",
+        "typescript": "^7.0.2",
+        "vitest": "^4.1.10",
+        "webpack": "^5.109.2",
+        "webpack-cli": "^7.2.2"
+    }
+}
