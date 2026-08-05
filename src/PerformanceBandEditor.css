@@ -37,7 +37,11 @@
 
 /* One band per row, fixed height so the list reads as a scale rather than as
    a stack of differently sized cards. The column widths line up with the
-   header's colgroup. */
+   header's colgroup.
+
+   Deliberately *not* `overflow: hidden`: the colour picker's popup is taller
+   than the row and would be clipped by it. Each cell that can overflow clips
+   itself instead. */
 .nt-performance-band .band-container {
     display: flex;
     flex: 1;
@@ -51,19 +55,12 @@
     padding: 0 6px;
     border-radius: 8px;
     gap: 8px;
-    overflow: hidden;
 }
 
 .nt-performance-band .band-container--color {
     display: flex;
     flex: 0 0 110px;
     align-items: center;
-    gap: 6px;
-}
-
-.nt-performance-band .band-container--color select {
-    flex-grow: 1;
-    min-width: 0;
 }
 
 /*
@@ -79,6 +76,91 @@
     height: 14px;
     border: 1px solid currentcolor;
     border-radius: 50%;
+}
+
+/*
+ * The colour picker.
+ *
+ * `position: relative` anchors the popup; the popup itself is the only thing in
+ * this stylesheet that needs a z-index, so that an open menu paints over the
+ * rows below it.
+ */
+.nt-performance-band .band-color-picker {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.nt-performance-band .band-color-picker--trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 5px;
+}
+
+.nt-performance-band .band-color-picker--value {
+    flex-grow: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nt-performance-band .band-color-picker--caret {
+    flex: 0 0 auto;
+}
+
+.nt-performance-band .band-color-picker--popup {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* The class sets `display`, so the attribute needs saying explicitly or the
+   popup would stay visible while hidden. */
+.nt-performance-band .band-color-picker--popup[hidden] {
+    display: none;
+}
+
+.nt-performance-band .band-color-picker--options {
+    display: grid;
+    grid-template-columns: repeat(4, 22px);
+    gap: 6px;
+}
+
+/* Focus stays on the listbox and moves virtually via aria-activedescendant, so
+   without a visible marker on the active option a keyboard user would be
+   navigating blind. This ships with the component rather than depending on the
+   host to add it; hosts can override it. */
+.nt-performance-band .band-color-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.nt-performance-band .band-color-option.is-active,
+.nt-performance-band .band-color-option[aria-selected="true"] {
+    border-color: currentcolor;
+}
+
+.nt-performance-band .band-color-picker--options:focus-visible {
+    outline: none;
+}
+
+.nt-performance-band .band-color-picker--custom {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    gap: 6px;
+    white-space: nowrap;
 }
 
 .nt-performance-band .band-container--label {

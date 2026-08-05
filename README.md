@@ -70,7 +70,8 @@ That also means reordering has never needed a mouse.
 | `bands` | `window._performanceBand`, then `[]` | Initial bands. **Adopted, not copied** — edits land on the array you pass, and it is sorted in place on adoption. |
 | `fieldPrefix` | `'performance_band'` | Prefix for every generated form field name. |
 | `maxValue` | `100` | Top of the score scale, used for the highest band's span and for range validation. |
-| `colors` | Four host tokens | Colour tokens offered in each row's menu. |
+| `colors` | Four host tokens | Colour tokens offered in each row's picker. |
+| `allowCustomColor` | `false` | Adds a custom hex swatch to the picker. See below — it changes what `color` can contain. |
 | `host` | Bridge backed by `hostGlobal` | Host integration — see below. |
 | `hostGlobal` | `'PerformanceBandHost'` | Name of the global carrying the host bridge. Ignored when `host` is passed. |
 | `onChange` | — | Called after every edit, including individual keystrokes. |
@@ -146,6 +147,12 @@ row at fault.
 - The mastery checkbox keeps a **visible** label — a lone checkbox is the one control whose
   meaning is not recoverable from the column header once the row scrolls away from it.
 - Icon-only buttons carry `aria-label` as well as `title`.
+- **The colour picker is a proper listbox popup.** The trigger is a real button with
+  `aria-haspopup`/`aria-expanded`; the grid is `role="listbox"` with `role="option"` swatches and
+  `aria-selected`. Focus stays on the listbox and moves virtually via `aria-activedescendant`, so
+  the active swatch is announced and carries a visible marker. <kbd>↓</kbd> opens, arrows move
+  (<kbd>↑</kbd>/<kbd>↓</kbd> by a row, since it is a grid), <kbd>Home</kbd>/<kbd>End</kbd> jump to
+  the ends, <kbd>Enter</kbd>/<kbd>Space</kbd> select, <kbd>Esc</kbd> closes and returns focus.
 - Bands expose `role="list"` / `role="listitem"`; the summary is an `aria-live` region; the
   empty state is `role="status"`.
 - The span readout carries a visually hidden "Covers scores:" prefix, so it is not a bare pair
@@ -214,10 +221,10 @@ with no application framework behind it.
 
 ### Colours are yours
 
-`color` is a **host theme token**, not a colour this library knows how to paint. The editor
-stores it, offers it in a menu and posts it; your stylesheet is what gives `blue-base` a blue.
-The token is applied to the swatch as a class and exposed as `data-color`, so you can hook
-either:
+By default `color` is a **host theme token**, not a colour this library knows how to paint. The
+editor stores it, offers it in the picker and posts it; your stylesheet is what gives
+`blue-base` a blue. The token is applied to the swatch as a class and exposed as `data-color`,
+so you can hook either:
 
 ```css
 .blue-base {
@@ -225,8 +232,8 @@ either:
 }
 ```
 
-The default menu offers the four tokens the host template ships with. Pass `colors` to offer
-your own:
+The picker is built into the library — a swatch grid, no dependency, and no `<select>`. It
+defaults to the four tokens the host template ships with; pass `colors` to offer your own:
 
 ```ts
 new PerformanceBandEditor({
@@ -237,8 +244,35 @@ new PerformanceBandEditor({
 });
 ```
 
-A band loaded with a token that is not in the menu keeps it — it is appended as an extra
-option rather than silently re-saved as something else.
+A band loaded with a token that is not in the palette keeps it — it gets an option of its own
+rather than being silently re-saved as something else.
+
+The picker ships **layout only**, like the rest of the stylesheet. Give the popup a surface of
+its own or it will render transparent over the row beneath it:
+
+```css
+.band-color-picker--popup {
+    border: 1px solid #ddd;
+    background: #fff;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+```
+
+### Custom colours
+
+`allowCustomColor: true` adds a hex swatch to the picker. It is **off by default, and that
+default is the safe one**: a token is a class your stylesheet paints wherever a band appears in
+your application, whereas a hex value has no class to hang on and is applied inline.
+
+```ts
+new PerformanceBandEditor({ allowCustomColor: true });
+```
+
+Turn it on and `color` can come back as `#3a6ea5`, so anything else that renders a band by
+class name has to handle that too. Existing token data is untouched — only a band someone
+deliberately gives a custom colour is affected. The library decides which is which by matching
+a strict hex pattern; anything else is treated as a class name and can never become a style
+declaration. See [SECURITY.md](SECURITY.md).
 
 ## Data model
 
@@ -254,6 +288,9 @@ interface Band {
 
 The keys are snake_case because this is the shape the host hands over as
 `window._performanceBand`, and the editor adopts that array rather than copying it.
+
+`color` is a host theme token by default, and only ever a hex literal if you turned on
+`allowCustomColor` and someone used it.
 
 `min_value` admits both numbers and strings because both genuinely occur — a saved band
 carries a number, a text input hands back a string. Comparison and sorting always go through a

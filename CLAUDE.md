@@ -125,9 +125,16 @@ a no-op when its counterpart is missing, so the editor still renders and still p
 form data on a page that provides nothing.
 
 **Colour tokens belong to the host.** `blue-base` is a host theme class, not something this
-library paints. The token is stored, offered in a menu, posted, applied to the swatch as a
+library paints. The token is stored, offered in the picker, posted, applied to the swatch as a
 class and exposed as `data-color` — and that is the entire relationship. Do not add colour
 values to `PerformanceBandEditor.css`.
+
+The **one** exception is a custom hex colour, which exists only when the host passes
+`allowCustomColor`. A hex value has no class to hang on, so `applySwatch()` writes it into an
+inline `background`. `src/dom/swatch.ts` decides which route a value takes, and its regex is
+the gate on the only path in the library that produces a style declaration — widening it
+widens a CSS injection surface. Both branches also fully reset the other's work, because one
+swatch node is reused as the value changes.
 
 ### 5. Accessibility is behaviour, not polish
 
@@ -151,6 +158,34 @@ Things that look like details and are not:
   a bare `90 – 100` with no indication of what it measures.
 - Reordering has no pointer-only path, because order follows the threshold. That is an
   accessibility property of the design, not an omission — do not "fix" it with drag handles.
+
+### 5a. The colour picker replaced a native control, so it owes what that control gave
+
+`ColorPicker` is a hand-built listbox popup. A `<select>` would have provided all of the
+following for free, which is the standard it has to meet — `tests/unit/ColorPicker.spec.ts`
+holds it there:
+
+- Trigger is a real `<button>` with `aria-haspopup="listbox"` and `aria-expanded`.
+- Popup is `role="listbox"`, swatches are `role="option"` with `aria-selected`.
+- **Focus stays on the listbox** and moves virtually via `aria-activedescendant`. That is what
+  makes a grid of `<div>`s navigable, and it is why `.band-color-option.is-active` ships with a
+  visible marker in the library's own stylesheet — without it a keyboard user navigates blind.
+- Up/Down move by `COLUMNS`, not by one. The popup is a grid to the eye and must be one to the
+  keyboard.
+
+Three things are load-bearing and non-obvious:
+
+- **The value posts from a hidden input**, not the control — a custom widget is not a form
+  element, and the wire format must not depend on one. Same reason as the mastery flag.
+- **`mousedown` on the listbox is `preventDefault()`ed.** Without it the listbox blurs on
+  mousedown, `focusout` closes the popup, and the click never reaches the swatch.
+- **Closing is done with `focusout`, deliberately not a document click listener.** `focusout`
+  already covers clicking away, tabbing away and focusing another picker, and it leaves nothing
+  to unregister when `renderList` throws a row away. Do not add a document-level listener here;
+  rows are rebuilt constantly and it would leak one per row.
+
+`.band-container` therefore **must not** set `overflow: hidden` — it would clip the popup. Cells
+that can overflow clip themselves instead.
 
 ### 6. Only one value may ever be HTML-parsed
 
@@ -180,6 +215,8 @@ src/
     validate.ts              Reports problems; never blocks input.
   dom/
     BandRow.ts               One row, built once and patched.
+    ColorPicker.ts           The swatch-grid listbox popup.
+    swatch.ts                Token-vs-hex routing; the only inline-style path.
     fieldNames.ts            The form contract.
     element.ts               el() / hostMarkup() / clear() / preserveFocus() / uniqueId().
     layout.ts                Header, footer, empty state.

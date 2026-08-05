@@ -122,6 +122,36 @@
                 background: #b4442c;
             }
 
+            /*
+             * The colour picker ships layout only, like the rest of the
+             * library — the popup's surface, border and shadow are the host's
+             * to provide, exactly as they are for any other menu on the page.
+             */
+            .nt-host .band-color-picker--popup {
+                border: 1px solid var(--nt-line);
+                background: var(--nt-surface);
+                box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+            }
+
+            .nt-host .band-color-picker--trigger {
+                border: 1px solid var(--nt-line);
+                font-size: 0.85rem;
+            }
+
+            .nt-host .band-color-picker--options:focus-visible {
+                outline: none;
+            }
+
+            .nt-host .band-color-option.is-active {
+                border-color: var(--nt-accent);
+                box-shadow: 0 0 0 2px var(--nt-surface), 0 0 0 3px var(--nt-accent);
+            }
+
+            .nt-host .band-color-picker--custom {
+                color: var(--nt-muted);
+                font-size: 0.78rem;
+            }
+
             .nt-payload {
                 max-height: 18rem;
                 overflow: auto;
@@ -165,6 +195,13 @@
                     <strong>Type a new minimum and the list re-sorts around it</strong> without losing your place — a
                     band's position is derived from its threshold rather than dragged, so reordering needs no mouse at
                     all. The <em>Covers</em> column shows the span each band claims; it updates as its neighbours move.
+                </p>
+                <p class="nt-note">
+                    The colour control is a swatch grid built into the library — no dependency, and fully operable from
+                    the keyboard: focus it and press <kbd>↓</kbd> to open, arrow around the grid, <kbd>Enter</kbd> to
+                    choose, <kbd>Esc</kbd> to back out. The four swatches are <em>host theme tokens</em> this page
+                    paints itself; the custom colour below them is switched on with <code>allowCustomColor</code> and is
+                    the one case the library paints inline.
                 </p>
                 <div id="problems" class="nt-note" role="status"></div>
 

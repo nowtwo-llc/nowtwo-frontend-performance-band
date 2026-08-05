@@ -29,6 +29,31 @@ function type(field: HTMLInputElement, value: string): void {
     field.dispatchEvent(new Event('input'));
 }
 
+function picker(row: number): HTMLElement {
+    return container.querySelectorAll<HTMLElement>('.band-color-picker')[row];
+}
+
+function trigger(row: number): HTMLButtonElement {
+    return picker(row).querySelector<HTMLButtonElement>('.band-color-picker--trigger')!;
+}
+
+function triggerSwatch(row: number): HTMLElement {
+    return trigger(row).querySelector<HTMLElement>('.band-swatch')!;
+}
+
+function optionTokens(row: number): string[] {
+    return Array.from(picker(row).querySelectorAll<HTMLElement>('[role="option"] .band-swatch')).map(
+        (swatch) => swatch.getAttribute('data-color') ?? ''
+    );
+}
+
+/** Drives the picker the way a person does: open it, then click a swatch. */
+function pickColor(row: number, token: string): void {
+    trigger(row).click();
+    const index = optionTokens(row).indexOf(token);
+    picker(row).querySelectorAll<HTMLElement>('[role="option"]')[index].click();
+}
+
 beforeEach(() => {
     document.body.replaceChildren();
     container = document.createElement('div');
@@ -240,20 +265,20 @@ describe('editing', () => {
 
     it('reflects a colour change onto the swatch', () => {
         const instance = mount({ bands: createBandSet() });
-        const select = container.querySelectorAll<HTMLSelectElement>('select')[0];
-        select.value = 'red-base';
-        select.dispatchEvent(new Event('change'));
+        pickColor(0, 'red-base');
 
         expect(instance.bands[0].color).to.equal('red-base');
-        expect(container.querySelector('.band-swatch')?.getAttribute('data-color')).to.equal('red-base');
-        expect(container.querySelector('.band-swatch')?.className).to.contain('red-base');
+        expect(values('performance_band_color[]')[0]).to.equal('red-base');
+        expect(triggerSwatch(0).getAttribute('data-color')).to.equal('red-base');
+        expect(triggerSwatch(0).className).to.contain('red-base');
     });
 
     it('keeps a colour token that is not in the palette instead of silently re-saving it', () => {
         mount({ bands: [createBand({ color: 'teal-base' })] });
-        const select = container.querySelector<HTMLSelectElement>('select');
 
-        expect(select?.value).to.equal('teal-base');
+        expect(values('performance_band_color[]')[0]).to.equal('teal-base');
+        expect(optionTokens(0)).to.contain('teal-base');
+        expect(triggerSwatch(0).getAttribute('data-color')).to.equal('teal-base');
     });
 });
 
@@ -365,10 +390,26 @@ describe('host integration', () => {
             ]
         });
 
-        expect(Array.from(container.querySelectorAll('option')).map((option) => option.textContent)).to.deep.equal([
-            'A',
-            'B'
-        ]);
+        expect(optionTokens(0)).to.deep.equal(['a', 'b']);
+    });
+
+    it('offers no custom colour unless the host opts in', () => {
+        mount({ bands: createBandSet() });
+
+        expect(container.querySelector('input[type="color"]')).to.equal(null);
+    });
+
+    it('offers a custom colour when the host opts in, and posts the hex it returns', () => {
+        const instance = mount({ bands: createBandSet(), allowCustomColor: true });
+        const custom = container.querySelector<HTMLInputElement>('input[type="color"]')!;
+        custom.value = '#3a6ea5';
+        custom.dispatchEvent(new Event('input'));
+
+        expect(instance.bands[0].color).to.equal('#3a6ea5');
+        expect(values('performance_band_color[]')[0]).to.equal('#3a6ea5');
+        // A hex value has no host class to hang on, so it is painted inline.
+        expect(triggerSwatch(0).style.background).to.not.equal('');
+        expect(triggerSwatch(0).hasAttribute('data-color')).to.equal(false);
     });
 });
 

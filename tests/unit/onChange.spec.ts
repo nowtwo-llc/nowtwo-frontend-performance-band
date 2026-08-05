@@ -60,9 +60,8 @@ describe('onChange', () => {
         const instance = new PerformanceBandEditor({ container, bands: createBandSet(), onChange }).mount();
         editor = instance;
 
-        const select = container.querySelector<HTMLSelectElement>('select');
-        select!.value = 'red-base';
-        select!.dispatchEvent(new Event('change'));
+        container.querySelector<HTMLButtonElement>('.band-color-picker--trigger')!.click();
+        container.querySelectorAll<HTMLElement>('[role="option"]')[3].click();
 
         const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]');
         checkbox!.checked = false;

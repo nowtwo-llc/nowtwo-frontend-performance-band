@@ -1,9 +1,8 @@
 import type { Band, BandColor, BandRange, HostBridge } from '../types';
 import { masteryFieldValue, toMastery } from '../model/ranges';
+import { ColorPicker } from './ColorPicker';
 import { el, hiddenLabel, hostMarkup, uniqueId, VISUALLY_HIDDEN_CLASS } from './element';
 import { bandFields } from './fieldNames';
-
-export const SWATCH_CLASS = 'band-swatch';
 
 export interface BandRowCallbacks {
     onRemove(): void;
@@ -17,6 +16,7 @@ export interface BandRowConfig {
     band: Band;
     prefix: string;
     colors: BandColor[];
+    allowCustomColor: boolean;
     host: HostBridge;
     callbacks: BandRowCallbacks;
 }
@@ -43,9 +43,7 @@ export class BandRow {
 
     private readonly callbacks: BandRowCallbacks;
 
-    private readonly colorSelect: HTMLSelectElement;
-
-    private readonly swatch: HTMLSpanElement;
+    private readonly colorPicker: ColorPicker;
 
     private readonly labelField: HTMLInputElement;
 
@@ -64,33 +62,26 @@ export class BandRow {
      */
     private readonly masteryField: HTMLInputElement;
 
-    constructor({ band, prefix, colors, host, callbacks }: BandRowConfig) {
+    constructor({ band, prefix, colors, allowCustomColor, host, callbacks }: BandRowConfig) {
         this.band = band;
         this.host = host;
         this.callbacks = callbacks;
 
         const fields = bandFields(prefix);
 
-        const colorId = uniqueId('nt-band-color');
         const labelId = uniqueId('nt-band-label');
         const valueId = uniqueId('nt-band-value');
         const masteryId = uniqueId('nt-band-mastery');
 
-        this.swatch = el('span', { class: SWATCH_CLASS, 'aria-hidden': 'true' });
-
-        this.colorSelect = el(
-            'select',
-            { id: colorId, class: 'input', name: fields.color },
-            colors.map((color) =>
-                el('option', { value: color.token, selected: color.token === band.color }, [color.label])
-            )
-        );
-        // A band loaded with a token that is not in the palette would otherwise
-        // silently re-save as whichever option the browser selected instead.
-        if (!colors.some((color) => color.token === band.color)) {
-            this.colorSelect.append(el('option', { value: band.color, selected: true }, [band.color]));
-        }
-        this.colorSelect.addEventListener('change', () => this.callbacks.onColorChange(this.colorSelect.value));
+        this.colorPicker = new ColorPicker({
+            value: band.color,
+            name: fields.color,
+            colors,
+            allowCustom: allowCustomColor,
+            label: 'Band colour',
+            host,
+            onChange: (value) => this.callbacks.onColorChange(value)
+        });
 
         this.labelField = el('input', {
             type: 'text',
@@ -137,28 +128,24 @@ export class BandRow {
         );
 
         this.element = this.build(el('input', { type: 'hidden', name: fields.id, value: band.id }), {
-            colorId,
             labelId,
             valueId,
             masteryId
         });
-
-        this.updateColor();
     }
 
     private build(
         idField: HTMLInputElement,
-        ids: { colorId: string; labelId: string; valueId: string; masteryId: string }
+        ids: { labelId: string; valueId: string; masteryId: string }
     ): HTMLElement {
         const removeButton = this.iconButton('fa-trash', 'Remove band', () => this.callbacks.onRemove());
 
         return el('div', { class: 'band-container', role: 'listitem' }, [
             idField,
-            el('div', { class: 'band-container--color' }, [
-                hiddenLabel(ids.colorId, 'Band colour'),
-                this.swatch,
-                this.colorSelect
-            ]),
+            // The picker names itself through its trigger's own content, so
+            // there is no separate <label> here — a label cannot be associated
+            // with a button anyway.
+            el('div', { class: 'band-container--color' }, [this.colorPicker.element]),
             el('div', { class: 'band-container--label' }, [hiddenLabel(ids.labelId, 'Band label'), this.labelField]),
             el('div', { class: 'band-container--value' }, [hiddenLabel(ids.valueId, 'Minimum value'), this.valueField]),
             el('div', { class: 'band-container--range' }, [
@@ -213,12 +200,9 @@ export class BandRow {
         this.rangeReadout.textContent = range.isTop ? `${range.from} – ${range.to}` : `${range.from} – <${range.to}`;
     }
 
-    /** Reflects the band's colour token onto the swatch. */
+    /** Reflects the band's colour onto the picker. */
     updateColor(): void {
-        // The token doubles as a host theme class, so it is applied as one as
-        // well as exposed via data-color; a host can hook either.
-        this.swatch.className = `${SWATCH_CLASS} ${this.band.color}`;
-        this.swatch.setAttribute('data-color', this.band.color);
+        this.colorPicker.setValue(this.band.color);
     }
 
     /** Writes the mastery flag into the field the host actually posts. */

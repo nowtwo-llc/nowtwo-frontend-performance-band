@@ -36,9 +36,24 @@ runtime — there was no editor. This release is the editor.
   `window.PerformanceBandHost`, or pass a `host` option. Every member is optional and anything
   omitted degrades to a no-op — with no bridge at all the icons render empty and everything
   else still works. `example/host.js` is a complete worked bridge.
+- **A built-in colour picker** — a swatch grid, not a `<select>`, and no dependency to get it.
+  It is a proper listbox popup: `aria-haspopup`/`aria-expanded` on the trigger, `role="option"`
+  swatches with `aria-selected`, and focus held on the listbox with `aria-activedescendant` so
+  the active swatch is announced and visibly marked. <kbd>↓</kbd> opens, arrows move
+  (<kbd>↑</kbd>/<kbd>↓</kbd> by a row, since it is a grid), <kbd>Home</kbd>/<kbd>End</kbd> jump
+  to the ends, <kbd>Enter</kbd>/<kbd>Space</kbd> select, <kbd>Esc</kbd> closes and returns
+  focus. The value posts from a hidden input, because a custom widget is not a form element.
+
+  The popup ships layout only, so give `.band-color-picker--popup` a surface in your own CSS.
 - **Configurable colour palette** via the `colors` option, defaulting to the four tokens the
   host template ships with. A band loaded with a token outside the palette keeps it rather than
   being silently re-saved as something else.
+- **`allowCustomColor`**, off by default, adding an arbitrary hex swatch to the picker. Tokens
+  remain the default and the wire format; a hex value has no host class to hang on, so it is
+  the one thing the library paints inline. Turning it on means `color` can come back as
+  `#3a6ea5`, so anything else in your application that renders a band by class name has to
+  handle that too. A strict hex test decides the route, and it is the gate on the only path in
+  the library that produces a style declaration.
 - **Accessibility as behaviour.** Real `<label for>` elements on every control, a visible label
   on the mastery checkbox, `aria-label` on icon-only buttons, `role="list"`/`"listitem"`, an
   `aria-live` summary, a `role="status"` empty state, and a visually hidden prefix on the span

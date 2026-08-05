@@ -27,6 +27,10 @@
         editor = new PerformanceBandEditor({
             container: '#nt-performance-band-app',
             bands: bands,
+            // Off by default. Turned on here so the demo can show both halves
+            // of the picker — palette tokens the host paints, and an arbitrary
+            // hex the library has to paint inline.
+            allowCustomColor: true,
             // Fires on every keystroke, so the status line and the validity
             // readout stay current without the page polling anything.
             onChange: function (_bands, instance) {

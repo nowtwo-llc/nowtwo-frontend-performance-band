@@ -111,6 +111,16 @@ export interface PerformanceBandEditorOptions {
      * template ships with; supply your own to match a different palette.
      */
     colors?: BandColor[];
+    /**
+     * Lets a band take an arbitrary hex colour instead of a palette token.
+     *
+     * Off by default, and that default is the safe one: a token is a host theme
+     * class your stylesheet paints wherever a band is displayed, whereas a hex
+     * value has no class to hang on and is applied inline. Turning this on means
+     * `color` can come back as `#3a6ea5`, so anything else in your application
+     * that renders a band by class name has to handle that too.
+     */
+    allowCustomColor?: boolean;
     /** Host integration. Defaults to a bridge backed by the `hostGlobal` object. */
     host?: HostBridge;
     /**

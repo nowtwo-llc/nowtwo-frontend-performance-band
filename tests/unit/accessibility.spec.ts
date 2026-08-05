@@ -65,12 +65,12 @@ describe('accessible names', () => {
 
     it('hides those labels visually but leaves them in the accessibility tree', () => {
         mount();
-        const hidden = container.querySelector(`.${VISUALLY_HIDDEN_CLASS}`);
+        const hidden = container.querySelector(`label.${VISUALLY_HIDDEN_CLASS}`);
 
         // clip-path, not display:none — the latter removes the label from the
         // accessibility tree as well, which is the opposite of the point.
         expect(hidden).to.not.equal(null);
-        expect(hidden?.tagName).to.equal('LABEL');
+        expect(hidden?.getAttribute('for')).to.not.equal(null);
     });
 
     it('gives ids that do not collide between two editors on one page', () => {

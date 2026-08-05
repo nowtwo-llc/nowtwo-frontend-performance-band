@@ -37,12 +37,26 @@ The things most worth reporting:
   | Icon markup | `HostBridge.icon()` | Return a `Node` instead of a string — it is cloned and inserted as-is |
 
   The string form is trusted by design: it comes from the host application, not from the
-  person using the editor. Colour tokens are **not** parsed as markup — they are written with
-  `className` and `setAttribute`, so a hostile token can at worst name a class that does not
-  exist.
+  person using the editor.
 
   If you find any path that turns *editor* input into parsed markup or executed script, that
   is a vulnerability and we want to hear about it.
+
+- **CSS injection through a colour value.** A band's `color` reaches the DOM by one of two
+  routes, and which one is chosen by a strict hex test in `src/dom/swatch.ts`:
+
+  | Value | Route |
+  | --- | --- |
+  | Matches `#rgb` / `#rrggbb` | Written into an inline `background` |
+  | Anything else | Written as a **class name** via `className` / `data-color` |
+
+  The regex is the gate on the only path that produces a style declaration, so a value such as
+  `red; background: url(...)` fails it and lands on the class-name branch, where it becomes an
+  inert class rather than CSS. A report that any non-hex value can reach the inline branch is
+  a vulnerability.
+
+  The inline branch only ever runs when the host passes `allowCustomColor: true`; with the
+  default the field is treated purely as a host theme token.
 
 - **Form field names.** The editor's inputs post through the host's form under the names
   documented in `src/dom/fieldNames.ts`. Every field is a flat array paired up by document

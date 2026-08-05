@@ -58,6 +58,8 @@ export class PerformanceBandEditor {
 
     private readonly colors: BandColor[];
 
+    private readonly allowCustomColor: boolean;
+
     private container: HTMLElement | null = null;
 
     private root: HTMLElement | null = null;
@@ -83,6 +85,7 @@ export class PerformanceBandEditor {
         this.prefix = options.fieldPrefix ?? DEFAULT_FIELD_PREFIX;
         this.maxValue = options.maxValue ?? DEFAULT_MAX_VALUE;
         this.colors = options.colors?.length ? options.colors : DEFAULT_COLORS;
+        this.allowCustomColor = options.allowCustomColor ?? false;
         this.state = new BandState(options.bands ?? window._performanceBand ?? [], this.maxValue, this.colors);
     }
 
@@ -232,6 +235,7 @@ export class PerformanceBandEditor {
                 band,
                 prefix: this.prefix,
                 colors: this.colors,
+                allowCustomColor: this.allowCustomColor,
                 host: this.host,
                 callbacks: {
                     onRemove: () => this.removeBand(this.indexOf(row)),
